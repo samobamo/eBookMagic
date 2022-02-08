@@ -16,3 +16,4 @@ OCR solution for reading your borrowed e-books on Kindle
     or with "Export" button export the text directly in MS Word.
 12. Edit the file to your needs, convert it with Calibre, upload to Kindle and read.
 13. OCR engine works only for Slovenian language.
+14. Use context menu in system tray if something goes wrong.
