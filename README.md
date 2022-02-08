@@ -1,5 +1,5 @@
 # eBookMagic
-OCR solution for your borrowed e-books
+OCR solution for reading your borrowed e-books on Kindle
 
 0. Own Kindle
 1. Borrow a book from your library
