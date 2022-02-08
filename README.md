@@ -11,7 +11,7 @@ OCR solution for reading your borrowed e-books on Kindle
 7. Press button "Read".
 8. Main app is now hidden, but screen capture overlay is shown. Drag and resize this frame to match boundries of your text (only book text!)
 9. Press allmost invisible button on top of frame that says "Select region"
-10. Wait. A. Long. Time.
+10. Wait. A. Long. Time. Do not close ADE, or do something else with computer, because the app WILL take screenshots of your selected region FOREVER!
 11. When scanning process is completed, main app is shown again. Read text is now visible in textbox. You can copy it to your favourite text editor for some editing,
     or with "Export" button export the text directly in MS Word.
 12. Edit the file to your needs, convert it with Calibre, upload to Kindle and read.
