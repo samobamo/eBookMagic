@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32112.339
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OCR", "OCR\OCR.csproj", "{280B359B-780C-4E76-8CFE-60E7D4683629}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "eBook Scraper", "eBook Scraper\eBook Scraper.vdproj", "{B449C1BC-673D-467F-A0B9-7E5A9081D913}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{280B359B-780C-4E76-8CFE-60E7D4683629}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{280B359B-780C-4E76-8CFE-60E7D4683629}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{280B359B-780C-4E76-8CFE-60E7D4683629}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{280B359B-780C-4E76-8CFE-60E7D4683629}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B449C1BC-673D-467F-A0B9-7E5A9081D913}.Debug|Any CPU.ActiveCfg = Debug
+		{B449C1BC-673D-467F-A0B9-7E5A9081D913}.Release|Any CPU.ActiveCfg = Release
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {835AC95C-EC6F-4275-B77F-D194FF682557}
+	EndGlobalSection
+EndGlobal
