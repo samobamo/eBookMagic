@@ -19,11 +19,21 @@ namespace OCR
         private int readAttempt, maxReadAttempt, pagesToRead, index;
         private Image activeImage;
         private bool readCompleted;
+        private ProgressFloater _progressFloater;
+        private ComparisonView _comparisonView;
+        private Image _lastScreenshot;
+        private string _lastExtractedText;
+        private float _lastConfidence;
 
         public Form1()
         {
             InitializeComponent();
             InitializeStuff();
+            
+            // Set initial tray icon text
+            notifyIcon1.Text = "eBookMagic - Ready";
+            notifyIcon1.BalloonTipTitle = "eBookMagic";
+            notifyIcon1.BalloonTipIcon = ToolTipIcon.Info;
         }
 
         private void InitializeStuff()
@@ -51,6 +61,8 @@ namespace OCR
                     AppConfig.TessdataPath,
                     AppConfig.OcrLanguage,
                     AppConfig.OcrEngineMode);
+                pagesToReadTextBox.Text = AppConfig.DefaultPagesToRead.ToString();
+                readAttemptTextBox.Text = AppConfig.DefaultMaxReadAttempts.ToString();
             }
             catch (Exception ex)
             {
@@ -85,12 +97,26 @@ namespace OCR
 
             if (!string.IsNullOrEmpty(currentHash) && prevHash != currentHash)
             {
+                // Store last screenshot for comparison view
+                _lastScreenshot?.Dispose();
+                _lastScreenshot = (Image)activeImage.Clone();
+                
                 // Create new tessImage and process it
                 using (var tempTessImage = Pix.LoadFromMemory(imageBytes))
                 {
                     using (var tempRes = tesseractEngine.Process(tempTessImage))
                     {
-                        richTextBox1.AppendText(tempRes.GetText());
+                        string extractedText = tempRes.GetText();
+                        _lastConfidence = tempRes.GetMeanConfidence();
+                        _lastExtractedText = extractedText;
+                        
+                        richTextBox1.AppendText(extractedText);
+                        
+                        // Update comparison view if open
+                        if (_comparisonView != null && !_comparisonView.IsDisposed)
+                        {
+                            _comparisonView.UpdateComparison(_lastScreenshot, extractedText, _lastConfidence);
+                        }
                     }
                 }
                 
@@ -223,6 +249,17 @@ namespace OCR
 
             // Disable UI during processing
             button5.Enabled = false;
+            buttonSave.Enabled = false;
+            buttonClear.Enabled = false;
+            
+            UpdateStatus("Starting OCR...");
+            ShowProgress(true, 0, pagesToRead);
+            notifyIcon1.Text = "eBookMagic - Starting OCR...";
+            
+            // Create and show floating progress window
+            _progressFloater = new ProgressFloater();
+            _progressFloater.Show();
+            _progressFloater.StartProgress(pagesToRead);
             
             if (AppConfig.ShowTimestamps)
                 richTextBox1.AppendText($"\n--- Starting OCR at {DateTime.Now:yyyy-MM-dd HH:mm:ss} ---\n");
@@ -232,6 +269,15 @@ namespace OCR
                 // Process pages
                 while (!readCompleted && index < pagesToRead)
                 {
+                    // Check if user cancelled from progress floater
+                    if (_progressFloater.CancelRequested)
+                    {
+                        readCompleted = true;
+                        richTextBox1.AppendText($"\n--- OCR Cancelled at page {index} by user ---\n");
+                        UpdateStatus("OCR cancelled by user");
+                        break;
+                    }
+                    
                     await System.Threading.Tasks.Task.Delay(AppConfig.PageTurnDelayMs);
                     TakeScreenShot();
                     ProcessImage();
@@ -244,22 +290,101 @@ namespace OCR
                         richTextBox1.AppendText($"\n[Progress: {index} pages processed]\n");
                         System.Windows.Forms.Application.DoEvents();
                     }
+                    
+                    // Update progress bar and status
+                    ShowProgress(true, index, pagesToRead);
+                    UpdatePageCount(index);
+                    UpdateStatus($"Processing page {index} of {pagesToRead}...");
+                    
+                    // Update floating progress window
+                    _progressFloater?.UpdateProgress(index, pagesToRead, "Processing...");
+                    
+                    // Update system tray icon for minimized feedback
+                    int percentage = (int)((double)index / pagesToRead * 100);
+                    notifyIcon1.Text = $"eBookMagic - {index}/{pagesToRead} ({percentage}%)";
+                    
+                    // Show balloon tip at 25%, 50%, 75% milestones (only once per milestone)
+                    if (percentage == 25 || percentage == 50 || percentage == 75)
+                    {
+                        try
+                        {
+                            notifyIcon1.BalloonTipTitle = "OCR Progress";
+                            notifyIcon1.BalloonTipText = $"{percentage}% complete - {index} of {pagesToRead} pages processed";
+                            notifyIcon1.BalloonTipIcon = ToolTipIcon.Info;
+                            notifyIcon1.ShowBalloonTip(3000);
+                        }
+                        catch
+                        {
+                            // Balloon tips may fail on some Windows configurations
+                        }
+                    }
                 }
 
                 if (AppConfig.ShowTimestamps)
                     richTextBox1.AppendText($"\n--- Completed at {DateTime.Now:yyyy-MM-dd HH:mm:ss}. Total pages: {index} ---\n");
+                
+                UpdateStatus("OCR completed successfully");
+                ShowProgress(false);
+                UpdatePageCount(index);
+                
+                // Update progress floater to show completion
+                _progressFloater?.CompleteProgress($"Complete! {index} pages processed.");
+                
+                // Notify user via system tray
+                try
+                {
+                    notifyIcon1.BalloonTipTitle = "OCR Complete";
+                    notifyIcon1.BalloonTipText = $"Successfully processed {index} pages!";
+                    notifyIcon1.BalloonTipIcon = ToolTipIcon.Info;
+                    notifyIcon1.ShowBalloonTip(5000);
+                }
+                catch { }
+                
+                notifyIcon1.Text = "eBookMagic - Ready";
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error during OCR processing: {ex.Message}", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
+                UpdateStatus("OCR failed with error");
+                ShowProgress(false);
+                notifyIcon1.Text = "eBookMagic - Error occurred";
+                
+                // Update progress floater
+                _progressFloater?.CompleteProgress("Error occurred!");
+                
+                try
+                {
+                    notifyIcon1.BalloonTipTitle = "OCR Error";
+                    notifyIcon1.BalloonTipText = "An error occurred during processing.";
+                    notifyIcon1.BalloonTipIcon = ToolTipIcon.Error;
+                    notifyIcon1.ShowBalloonTip(5000);
+                }
+                catch { }
             }
             finally
             {
                 // Re-enable UI and restore window
                 button5.Enabled = true;
+                buttonSave.Enabled = true;
+                buttonClear.Enabled = true;
                 Show();
                 WindowState = FormWindowState.Normal;
+                
+                // Close progress floater after a delay
+                if (_progressFloater != null && !_progressFloater.IsDisposed)
+                {
+                    await System.Threading.Tasks.Task.Delay(3000); // Show completion for 3 seconds
+                    _progressFloater?.Close();
+                    _progressFloater?.Dispose();
+                    _progressFloater = null;
+                }
+                
+                if (!readCompleted)
+                {
+                    UpdateStatus("Ready");
+                    notifyIcon1.Text = "eBookMagic - Ready";
+                }
             }
         }
 
@@ -278,12 +403,19 @@ namespace OCR
             notifyIcon1.Visible = false;
         }
 
+        #region Menu and Button Event Handlers
+
         private void buttonSettings_Click(object sender, EventArgs e)
         {
             OpenSettingsDialog();
         }
 
         private void toolStripMenuItemSettings_Click(object sender, EventArgs e)
+        {
+            OpenSettingsDialog();
+        }
+
+        private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenSettingsDialog();
         }
@@ -295,9 +427,245 @@ namespace OCR
                 if (settingsForm.ShowDialog() == DialogResult.OK)
                 {
                     // Settings were saved successfully
-                    // User was already notified about restart requirement
+                    UpdateStatus("Settings updated. Restart application for changes to take effect.");
                 }
             }
         }
+
+        private void buttonSave_Click(object sender, EventArgs e)
+        {
+            SaveText();
+        }
+
+        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveText();
+        }
+
+        private void SaveText()
+        {
+            if (string.IsNullOrEmpty(richTextBox1.Text))
+            {
+                MessageBox.Show("No text to save.", "Save", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            using (var saveDialog = new SaveFileDialog())
+            {
+                saveDialog.Filter = "Text Files (*.txt)|*.txt|All Files (*.*)|*.*";
+                saveDialog.DefaultExt = "txt";
+                saveDialog.FileName = $"OCR_Extract_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
+
+                if (saveDialog.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        File.WriteAllText(saveDialog.FileName, richTextBox1.Text);
+                        UpdateStatus($"Saved to {Path.GetFileName(saveDialog.FileName)}");
+                        MessageBox.Show("Text saved successfully!", "Success",
+                            MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Failed to save file:\\n{ex.Message}", "Error",
+                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+        }
+
+        private void loadToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            LoadText();
+        }
+
+        private void LoadText()
+        {
+            using (var openDialog = new OpenFileDialog())
+            {
+                openDialog.Filter = "Text Files (*.txt)|*.txt|All Files (*.*)|*.*";
+                openDialog.DefaultExt = "txt";
+
+                if (openDialog.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        richTextBox1.Text = File.ReadAllText(openDialog.FileName);
+                        UpdateStatus($"Loaded {Path.GetFileName(openDialog.FileName)}");
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Failed to load file:\\n{ex.Message}", "Error",
+                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+        }
+
+        private void buttonClear_Click(object sender, EventArgs e)
+        {
+            ClearOutput();
+        }
+
+        private void clearToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ClearOutput();
+        }
+
+        private void ClearOutput()
+        {
+            if (richTextBox1.Text.Length > 0)
+            {
+                var result = MessageBox.Show(
+                    "Clear all extracted text?",
+                    "Confirm Clear",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (result == DialogResult.Yes)
+                {
+                    richTextBox1.Clear();
+                    UpdateStatus("Output cleared");
+                    UpdatePageCount(0);
+                }
+            }
+        }
+
+        private void selectAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            richTextBox1.SelectAll();
+        }
+
+        private void alwaysOnTopToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.TopMost = alwaysOnTopToolStripMenuItem.Checked;
+            
+            // Sync the tray menu item
+            toolStripMenuItemAlwaysOnTop.Checked = alwaysOnTopToolStripMenuItem.Checked;
+            
+            if (this.TopMost)
+                UpdateStatus("Window set to always on top");
+            else
+                UpdateStatus("Window normal mode");
+        }
+
+        private void toolStripMenuItemAlwaysOnTop_Click(object sender, EventArgs e)
+        {
+            this.TopMost = toolStripMenuItemAlwaysOnTop.Checked;
+            
+            // Sync the View menu item
+            alwaysOnTopToolStripMenuItem.Checked = toolStripMenuItemAlwaysOnTop.Checked;
+            
+            if (this.TopMost)
+                UpdateStatus("Window set to always on top");
+            else
+                UpdateStatus("Window normal mode");
+        }
+
+        private void showComparisonViewToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowComparisonView();
+        }
+
+        private void ShowComparisonView()
+        {
+            // Create comparison view if it doesn't exist or was disposed
+            if (_comparisonView == null || _comparisonView.IsDisposed)
+            {
+                _comparisonView = new ComparisonView();
+                
+                // If we have last screenshot, show it
+                if (_lastScreenshot != null)
+                {
+                    _comparisonView.UpdateComparison(_lastScreenshot, _lastExtractedText, _lastConfidence);
+                }
+            }
+
+            // Show the comparison view
+            if (!_comparisonView.Visible)
+            {
+                _comparisonView.Show(this);
+                UpdateStatus("Comparison view opened");
+            }
+            else
+            {
+                _comparisonView.BringToFront();
+            }
+        }
+
+        private void exportToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            button2_Click(sender, e);
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
+
+        private void userGuideToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string guidePath = Path.Combine(Application.StartupPath, "GUI_SETTINGS_GUIDE.md");
+                if (File.Exists(guidePath))
+                {
+                    System.Diagnostics.Process.Start("notepad.exe", guidePath);
+                }
+                else
+                {
+                    MessageBox.Show(
+                        "User guide not found.\\n\\n" +
+                        "Please visit: https://github.com/samobamo/eBookMagic",
+                        "User Guide",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to open user guide:\\n{ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show(
+                "eBookMagic - OCR Text Extractor\\n" +
+                "Version 1.0\\n\\n" +
+                "Extract text from eBooks using Tesseract OCR\\n\\n" +
+                "� 2025 samobamo\\n" +
+                "GitHub: https://github.com/samobamo/eBookMagic",
+                "About eBookMagic",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+        }
+
+        #endregion
+
+        #region Status Bar Helpers
+
+        private void UpdateStatus(string message)
+        {
+            toolStripStatusLabel1.Text = message;
+        }
+
+        private void UpdatePageCount(int pages)
+        {
+            toolStripStatusLabel3.Text = $"{pages} pages";
+        }
+
+        private void ShowProgress(bool show, int value = 0, int maximum = 100)
+        {
+            toolStripProgressBar1.Visible = show;
+            if (show)
+            {
+                toolStripProgressBar1.Maximum = maximum;
+                toolStripProgressBar1.Value = Math.Min(value, maximum);
+            }
+        }
+
+        #endregion
     }
 }
