@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
@@ -13,57 +8,96 @@ namespace OCR
 {
     public partial class ScreenShot2 : Form
     {
-        public const int WM_NCLBUTTONDOWN = 0xA1;
-        public const int HTCAPTION = 0x2;
+        #region Win32 Constants and Imports
+
+        private const int WM_NCLBUTTONDOWN = 0xA1;
+        private const int WM_NCHITTEST = 0x84;
+        private const int HTCAPTION = 0x2;
+
+        // Hit-test codes for custom form resizing
+        private const int HTLEFT = 10;
+        private const int HTRIGHT = 11;
+        private const int HTTOP = 12;
+        private const int HTTOPLEFT = 13;
+        private const int HTTOPRIGHT = 14;
+        private const int HTBOTTOM = 15;
+        private const int HTBOTTOMLEFT = 16;
+        private const int HTBOTTOMRIGHT = 17;
 
         [DllImport("User32.dll")]
-        public static extern bool ReleaseCapture();
+        private static extern bool ReleaseCapture();
 
         [DllImport("User32.dll")]
-        public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+        private static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
 
-        private bool escapeClosed;
+        #endregion
+
+        #region Constants
+
+        private const int BORDER_THICKNESS = 10;
+
+        #endregion
+
+        #region Fields
+
+        private bool _wasCancelled;
+
+        #endregion
+
+        #region Properties
+
+        public Form InstanceRef { get; set; }
+
+        #endregion
+
+        #region Border Rectangles
+
+        private Rectangle TopBorder => new Rectangle(0, 0, ClientSize.Width, BORDER_THICKNESS);
+        private Rectangle LeftBorder => new Rectangle(0, 0, BORDER_THICKNESS, ClientSize.Height);
+        private Rectangle RightBorder => new Rectangle(ClientSize.Width - BORDER_THICKNESS, 0, BORDER_THICKNESS, ClientSize.Height);
+        private Rectangle BottomBorder => new Rectangle(0, ClientSize.Height - BORDER_THICKNESS, ClientSize.Width, BORDER_THICKNESS);
+
+        private Rectangle TopLeftCorner => new Rectangle(0, 0, BORDER_THICKNESS, BORDER_THICKNESS);
+        private Rectangle TopRightCorner => new Rectangle(ClientSize.Width - BORDER_THICKNESS, 0, BORDER_THICKNESS, BORDER_THICKNESS);
+        private Rectangle BottomLeftCorner => new Rectangle(0, ClientSize.Height - BORDER_THICKNESS, BORDER_THICKNESS, BORDER_THICKNESS);
+        private Rectangle BottomRightCorner => new Rectangle(ClientSize.Width - BORDER_THICKNESS, ClientSize.Height - BORDER_THICKNESS, BORDER_THICKNESS, BORDER_THICKNESS);
+
+        #endregion
+
+        #region Constructor
+
         public ScreenShot2()
         {
-            InitializeComponent();            
-            SetStyle(ControlStyles.ResizeRedraw, true);            
+            InitializeComponent();
+            SetStyle(ControlStyles.ResizeRedraw, true);
         }
 
-        private Form m_InstanceRef = null;
-        public Form InstanceRef
+        #endregion
+
+        #region Public API
+
+        public async Task<SelectionResult> GetSelectionResultAsync()
         {
-            get
-            {
-                return m_InstanceRef;
-            }
-            set
-            {
-                m_InstanceRef = value;
-            }
+            // Allow time for form to disappear before screenshot (configurable)
+            await Task.Delay(AppConfig.FormCloseDelayMs);
+            
+            var bounds = new Rectangle(Location.X, Location.Y, Width, Height);
+            return new SelectionResult(bounds, _wasCancelled);
         }
 
-        protected override void OnPaint(PaintEventArgs e) // you can safely omit this method if you want
+        [Obsolete("Use GetSelectionResultAsync instead. This method blocks the UI thread.", error: false)]
+        public Rectangle GetRectangle()
         {
-            e.Graphics.FillRectangle(Brushes.Red, Top);
-            e.Graphics.FillRectangle(Brushes.Red, Left);
-            e.Graphics.FillRectangle(Brushes.Red, Right);
-            e.Graphics.FillRectangle(Brushes.Red, Bottom);
-        }                
+            System.Threading.Thread.Sleep(AppConfig.FormCloseDelayMs);
+            return new Rectangle(Location.X, Location.Y, Width, Height);
+        }
 
-        private const int
-            HTLEFT = 10,
-            HTRIGHT = 11,
-            HTTOP = 12,
-            HTTOPLEFT = 13,
-            HTTOPRIGHT = 14,
-            HTBOTTOM = 15,
-            HTBOTTOMLEFT = 16,
-            HTBOTTOMRIGHT = 17;
+        [Obsolete("Use GetSelectionResultAsync instead.", error: false)]
+        public bool GetClosedFlag() => _wasCancelled;
 
-        const int _ = 10; // you can rename this variable if you like
+        #endregion
 
-        Rectangle Top { get { return new Rectangle(0, 0, this.ClientSize.Width, _); } }
-        Rectangle Left { get { return new Rectangle(0, 0, _, this.ClientSize.Height); } }
+        #region Event Handlers
 
         private void panel1_MouseDown(object sender, MouseEventArgs e)
         {
@@ -76,61 +110,76 @@ namespace OCR
 
         private void button1_Click(object sender, EventArgs e)
         {
-            //this.InstanceRef.Show();
-            //this.InstanceRef.WindowState = FormWindowState.Normal;
-            escapeClosed = false;
-            this.Close();
+            _wasCancelled = false;
+            Close();
+        }
+
+        #endregion
+
+        #region Overrides
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            e.Graphics.FillRectangle(Brushes.Red, TopBorder);
+            e.Graphics.FillRectangle(Brushes.Red, LeftBorder);
+            e.Graphics.FillRectangle(Brushes.Red, RightBorder);
+            e.Graphics.FillRectangle(Brushes.Red, BottomBorder);
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
             if (keyData == Keys.Escape)
-            {       
-                escapeClosed = true;
-                this.Close();                
+            {
+                _wasCancelled = true;
+                Close();
                 return true;
             }
             return base.ProcessCmdKey(ref msg, keyData);
         }
 
-        public Rectangle GetRectangle()
-        {
-            //Allow 250 milliseconds for the screen to repaint itself (we don't want to include this form in the capture)
-            System.Threading.Thread.Sleep(250);            
-            Rectangle bounds = new Rectangle(this.Location.X, this.Location.Y, this.Width, this.Height);
-            return bounds;
-        }
-        public bool GetClosedFlag()
-        {
-            return escapeClosed;
-        }
-
-        Rectangle Bottom { get { return new Rectangle(0, this.ClientSize.Height - _, this.ClientSize.Width, _); } }
-        Rectangle Right { get { return new Rectangle(this.ClientSize.Width - _, 0, _, this.ClientSize.Height); } }
-        Rectangle TopLeft { get { return new Rectangle(0, 0, _, _); } }
-        Rectangle TopRight { get { return new Rectangle(this.ClientSize.Width - _, 0, _, _); } }
-        Rectangle BottomLeft { get { return new Rectangle(0, this.ClientSize.Height - _, _, _); } }
-        Rectangle BottomRight { get { return new Rectangle(this.ClientSize.Width - _, this.ClientSize.Height - _, _, _); } }
-
-
         protected override void WndProc(ref Message message)
         {
             base.WndProc(ref message);
 
-            if (message.Msg == 0x84) // WM_NCHITTEST
+            if (message.Msg == WM_NCHITTEST)
             {
-                var cursor = this.PointToClient(Cursor.Position);
+                var cursor = PointToClient(Cursor.Position);
 
-                if (TopLeft.Contains(cursor)) message.Result = (IntPtr)HTTOPLEFT;
-                else if (TopRight.Contains(cursor)) message.Result = (IntPtr)HTTOPRIGHT;
-                else if (BottomLeft.Contains(cursor)) message.Result = (IntPtr)HTBOTTOMLEFT;
-                else if (BottomRight.Contains(cursor)) message.Result = (IntPtr)HTBOTTOMRIGHT;
-
-                else if (Top.Contains(cursor)) message.Result = (IntPtr)HTTOP;
-                else if (Left.Contains(cursor)) message.Result = (IntPtr)HTLEFT;
-                else if (Right.Contains(cursor)) message.Result = (IntPtr)HTRIGHT;
-                else if (Bottom.Contains(cursor)) message.Result = (IntPtr)HTBOTTOM;
+                if (TopLeftCorner.Contains(cursor))
+                    message.Result = (IntPtr)HTTOPLEFT;
+                else if (TopRightCorner.Contains(cursor))
+                    message.Result = (IntPtr)HTTOPRIGHT;
+                else if (BottomLeftCorner.Contains(cursor))
+                    message.Result = (IntPtr)HTBOTTOMLEFT;
+                else if (BottomRightCorner.Contains(cursor))
+                    message.Result = (IntPtr)HTBOTTOMRIGHT;
+                else if (TopBorder.Contains(cursor))
+                    message.Result = (IntPtr)HTTOP;
+                else if (LeftBorder.Contains(cursor))
+                    message.Result = (IntPtr)HTLEFT;
+                else if (RightBorder.Contains(cursor))
+                    message.Result = (IntPtr)HTRIGHT;
+                else if (BottomBorder.Contains(cursor))
+                    message.Result = (IntPtr)HTBOTTOM;
             }
         }
+
+        #endregion
+
+        #region Nested Types
+
+        public class SelectionResult
+        {
+            public Rectangle Bounds { get; }
+            public bool WasCancelled { get; }
+
+            public SelectionResult(Rectangle bounds, bool wasCancelled)
+            {
+                Bounds = bounds;
+                WasCancelled = wasCancelled;
+            }
+        }
+
+        #endregion
     }
 }

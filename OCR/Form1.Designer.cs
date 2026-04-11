@@ -13,9 +13,25 @@
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing)
             {
-                components.Dispose();
+                if (components != null)
+                {
+                    components.Dispose();
+                }
+                // Dispose only long-lived resources
+                // Note: Tesseract Page and Pix objects are disposed immediately after use in ProcessImage
+                try
+                {
+                    tesseractEngine?.Dispose();
+                }
+                catch { }
+                
+                try
+                {
+                    md5?.Dispose();
+                }
+                catch { }
             }
             base.Dispose(disposing);
         }
@@ -42,6 +58,8 @@
             this.button2 = new System.Windows.Forms.Button();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItemSettings = new System.Windows.Forms.ToolStripMenuItem();
+            this.buttonSettings = new System.Windows.Forms.Button();
             this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -132,12 +150,23 @@
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
+            // buttonSettings
+            // 
+            this.buttonSettings.Location = new System.Drawing.Point(566, 4);
+            this.buttonSettings.Name = "buttonSettings";
+            this.buttonSettings.Size = new System.Drawing.Size(75, 23);
+            this.buttonSettings.TabIndex = 14;
+            this.buttonSettings.Text = "Settings...";
+            this.buttonSettings.UseVisualStyleBackColor = true;
+            this.buttonSettings.Click += new System.EventHandler(this.buttonSettings_Click);
+            // 
             // contextMenuStrip1
             // 
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItemSettings,
             this.toolStripMenuItem1});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(134, 26);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(134, 48);
             // 
             // toolStripMenuItem1
             // 
@@ -146,11 +175,19 @@
             this.toolStripMenuItem1.Text = "Kill process";
             this.toolStripMenuItem1.Click += new System.EventHandler(this.toolStripMenuItem1_Click);
             // 
+            // toolStripMenuItemSettings
+            // 
+            this.toolStripMenuItemSettings.Name = "toolStripMenuItemSettings";
+            this.toolStripMenuItemSettings.Size = new System.Drawing.Size(133, 22);
+            this.toolStripMenuItemSettings.Text = "Settings...";
+            this.toolStripMenuItemSettings.Click += new System.EventHandler(this.toolStripMenuItemSettings_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 440);
+            this.Controls.Add(this.buttonSettings);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.label2);
@@ -180,8 +217,10 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button buttonSettings;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemSettings;
     }
 }
 
