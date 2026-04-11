@@ -467,7 +467,7 @@ namespace OCR
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"Failed to save file:\\n{ex.Message}", "Error",
+                        MessageBox.Show($"Failed to save file:\n{ex.Message}", "Error",
                             MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
@@ -495,7 +495,7 @@ namespace OCR
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"Failed to load file:\\n{ex.Message}", "Error",
+                        MessageBox.Show($"Failed to load file:\n{ex.Message}", "Error",
                             MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
@@ -615,7 +615,7 @@ namespace OCR
                 else
                 {
                     MessageBox.Show(
-                        "User guide not found.\\n\\n" +
+                        "User guide not found.\n\n" +
                         "Please visit: https://github.com/samobamo/eBookMagic",
                         "User Guide",
                         MessageBoxButtons.OK,
@@ -624,7 +624,7 @@ namespace OCR
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to open user guide:\\n{ex.Message}", "Error",
+                MessageBox.Show($"Failed to open user guide:\n{ex.Message}", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -632,10 +632,10 @@ namespace OCR
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
             MessageBox.Show(
-                "eBookMagic - OCR Text Extractor\\n" +
-                "Version 1.0\\n\\n" +
-                "Extract text from eBooks using Tesseract OCR\\n\\n" +
-                "� 2025 samobamo\\n" +
+                "eBookMagic - OCR Text Extractor\n" +
+                "Version 1.0\n\n" +
+                "Extract text from eBooks using Tesseract OCR\n\n" +
+                "© 2025 samobamo\n" +
                 "GitHub: https://github.com/samobamo/eBookMagic",
                 "About eBookMagic",
                 MessageBoxButtons.OK,
