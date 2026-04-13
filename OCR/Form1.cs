@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Drawing;
@@ -24,6 +25,7 @@ namespace OCR
         private Image _lastScreenshot;
         private string _lastExtractedText;
         private float _lastConfidence;
+        private List<ImageTextBuffer> listImages;
 
         public Form1()
         {
@@ -117,6 +119,9 @@ namespace OCR
                         {
                             _comparisonView.UpdateComparison(_lastScreenshot, extractedText, _lastConfidence);
                         }
+
+                        // Add to list of images and text
+                        listImages.Add(new ImageTextBuffer(index++, extractedText, (Image)_lastScreenshot.Clone()));
                     }
                 }
                 
@@ -228,6 +233,7 @@ namespace OCR
         {
             // Batch OCR reading
             readCompleted = false;
+            listImages = new List<ImageTextBuffer>();
             await GetCaptureRectangleAsync();
 
             if (readCompleted) // User cancelled selection
@@ -572,13 +578,14 @@ namespace OCR
             // Create comparison view if it doesn't exist or was disposed
             if (_comparisonView == null || _comparisonView.IsDisposed)
             {
-                _comparisonView = new ComparisonView();
-                
-                // If we have last screenshot, show it
-                if (_lastScreenshot != null)
+                //_comparisonView = new ComparisonView();
+                //load imageList
+                _comparisonView = new ComparisonView(listImages);
+                if (listImages != null && listImages.Count > 0)
                 {
-                    _comparisonView.UpdateComparison(_lastScreenshot, _lastExtractedText, _lastConfidence);
-                }
+                    var latest = listImages.First();
+                    _comparisonView.UpdateComparison(latest.Image, latest.Text, 0);
+                }                
             }
 
             // Show the comparison view

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -12,10 +13,19 @@ namespace OCR
         private Image _currentScreenshot;
         private string _currentExtractedText;
         private float _ocrConfidence;
+        private readonly List<ImageTextBuffer> _imageTextBuffer = new List<ImageTextBuffer>();
+        private int _currentBufferIndex = 0;
 
         public ComparisonView()
         {
             InitializeComponent();
+        }
+        public ComparisonView(List<ImageTextBuffer> buffer) : this()
+        {
+            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
+            _imageTextBuffer.Clear();
+            _imageTextBuffer.AddRange(buffer);
+            UpdateComparison(buffer[0].Image, buffer[0].Text);
         }
 
         /// <summary>
@@ -192,6 +202,52 @@ namespace OCR
                 _currentScreenshot?.Dispose();
             }
             base.Dispose(disposing);
+        }
+
+        //go back
+        private void button2_Click(object sender, EventArgs e)
+        {
+            if (_imageTextBuffer.Count > 1)
+            {
+                _currentBufferIndex -= 1;
+                if (_currentBufferIndex >= _imageTextBuffer.Count)
+                {
+                    _currentBufferIndex = 0;
+                }                
+                if (_currentBufferIndex < 0)
+                {
+                    _currentBufferIndex = _imageTextBuffer.Count - 1;
+                }
+                if (_imageTextBuffer[_currentBufferIndex].Image == null)
+                {
+                    _currentBufferIndex = 0;
+                }
+                else
+                {
+                    UpdateComparison(_imageTextBuffer[_currentBufferIndex].Image, _imageTextBuffer[_currentBufferIndex].Text);                    
+                }
+            }
+        }
+
+        //go forward
+        private void button1_Click(object sender, EventArgs e)
+        {
+            if (_imageTextBuffer.Count > 1)
+            {
+                _currentBufferIndex += 1;
+                if (_currentBufferIndex >= _imageTextBuffer.Count)
+                {
+                    _currentBufferIndex = 0;
+                }                
+                if (_imageTextBuffer[_currentBufferIndex].Image == null)
+                {
+                    _currentBufferIndex = 0;
+                }
+                else
+                {
+                    UpdateComparison(_imageTextBuffer[_currentBufferIndex].Image, _imageTextBuffer[_currentBufferIndex].Text);                    
+                }
+            }
         }
     }
 }

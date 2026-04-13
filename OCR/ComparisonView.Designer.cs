@@ -32,6 +32,8 @@ namespace OCR
             this.lblStats = new System.Windows.Forms.Label();
             this.lblQualityIndicator = new System.Windows.Forms.Label();
             this.lblConfidence = new System.Windows.Forms.Label();
+            this.button1 = new System.Windows.Forms.Button();
+            this.button2 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -58,7 +60,7 @@ namespace OCR
             // 
             this.splitContainer1.Panel2.Controls.Add(this.panelText);
             this.splitContainer1.Size = new System.Drawing.Size(1000, 600);
-            this.splitContainer1.SplitterDistance = 480;
+            this.splitContainer1.SplitterDistance = 479;
             this.splitContainer1.TabIndex = 0;
             // 
             // panelImage
@@ -71,7 +73,7 @@ namespace OCR
             this.panelImage.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelImage.Location = new System.Drawing.Point(0, 0);
             this.panelImage.Name = "panelImage";
-            this.panelImage.Size = new System.Drawing.Size(480, 600);
+            this.panelImage.Size = new System.Drawing.Size(479, 600);
             this.panelImage.TabIndex = 0;
             // 
             // pictureBoxOriginal
@@ -79,7 +81,7 @@ namespace OCR
             this.pictureBoxOriginal.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pictureBoxOriginal.Location = new System.Drawing.Point(0, 35);
             this.pictureBoxOriginal.Name = "pictureBoxOriginal";
-            this.pictureBoxOriginal.Size = new System.Drawing.Size(478, 563);
+            this.pictureBoxOriginal.Size = new System.Drawing.Size(477, 563);
             this.pictureBoxOriginal.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBoxOriginal.TabIndex = 0;
             this.pictureBoxOriginal.TabStop = false;
@@ -87,19 +89,21 @@ namespace OCR
             // panelImageHeader
             // 
             this.panelImageHeader.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(240)))), ((int)(((byte)(240)))));
+            this.panelImageHeader.Controls.Add(this.button2);
+            this.panelImageHeader.Controls.Add(this.button1);
             this.panelImageHeader.Controls.Add(this.btnZoomIn);
             this.panelImageHeader.Controls.Add(this.btnSaveImage);
             this.panelImageHeader.Controls.Add(this.lblOriginal);
             this.panelImageHeader.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelImageHeader.Location = new System.Drawing.Point(0, 0);
             this.panelImageHeader.Name = "panelImageHeader";
-            this.panelImageHeader.Size = new System.Drawing.Size(478, 35);
+            this.panelImageHeader.Size = new System.Drawing.Size(477, 35);
             this.panelImageHeader.TabIndex = 1;
             // 
             // btnZoomIn
             // 
             this.btnZoomIn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnZoomIn.Location = new System.Drawing.Point(389, 6);
+            this.btnZoomIn.Location = new System.Drawing.Point(388, 6);
             this.btnZoomIn.Name = "btnZoomIn";
             this.btnZoomIn.Size = new System.Drawing.Size(80, 23);
             this.btnZoomIn.TabIndex = 2;
@@ -110,7 +114,7 @@ namespace OCR
             // btnSaveImage
             // 
             this.btnSaveImage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSaveImage.Location = new System.Drawing.Point(281, 6);
+            this.btnSaveImage.Location = new System.Drawing.Point(280, 6);
             this.btnSaveImage.Name = "btnSaveImage";
             this.btnSaveImage.Size = new System.Drawing.Size(102, 23);
             this.btnSaveImage.TabIndex = 1;
@@ -124,9 +128,9 @@ namespace OCR
             this.lblOriginal.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblOriginal.Location = new System.Drawing.Point(8, 9);
             this.lblOriginal.Name = "lblOriginal";
-            this.lblOriginal.Size = new System.Drawing.Size(124, 17);
+            this.lblOriginal.Size = new System.Drawing.Size(58, 17);
             this.lblOriginal.TabIndex = 0;
-            this.lblOriginal.Text = "Original Screenshot";
+            this.lblOriginal.Text = "Original";
             // 
             // panelText
             // 
@@ -135,7 +139,7 @@ namespace OCR
             this.panelText.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelText.Location = new System.Drawing.Point(0, 0);
             this.panelText.Name = "panelText";
-            this.panelText.Size = new System.Drawing.Size(516, 600);
+            this.panelText.Size = new System.Drawing.Size(517, 600);
             this.panelText.TabIndex = 0;
             // 
             // txtExtracted
@@ -146,7 +150,7 @@ namespace OCR
             this.txtExtracted.Location = new System.Drawing.Point(0, 35);
             this.txtExtracted.Name = "txtExtracted";
             this.txtExtracted.ReadOnly = true;
-            this.txtExtracted.Size = new System.Drawing.Size(516, 565);
+            this.txtExtracted.Size = new System.Drawing.Size(517, 565);
             this.txtExtracted.TabIndex = 0;
             this.txtExtracted.Text = "";
             // 
@@ -158,13 +162,13 @@ namespace OCR
             this.panelTextHeader.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelTextHeader.Location = new System.Drawing.Point(0, 0);
             this.panelTextHeader.Name = "panelTextHeader";
-            this.panelTextHeader.Size = new System.Drawing.Size(516, 35);
+            this.panelTextHeader.Size = new System.Drawing.Size(517, 35);
             this.panelTextHeader.TabIndex = 1;
             // 
             // btnCopyText
             // 
             this.btnCopyText.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCopyText.Location = new System.Drawing.Point(398, 6);
+            this.btnCopyText.Location = new System.Drawing.Point(399, 6);
             this.btnCopyText.Name = "btnCopyText";
             this.btnCopyText.Size = new System.Drawing.Size(110, 23);
             this.btnCopyText.TabIndex = 1;
@@ -178,7 +182,7 @@ namespace OCR
             this.lblExtracted.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblExtracted.Location = new System.Drawing.Point(8, 9);
             this.lblExtracted.Name = "lblExtracted";
-            this.lblExtracted.Size = new System.Drawing.Size(100, 17);
+            this.lblExtracted.Size = new System.Drawing.Size(95, 17);
             this.lblExtracted.TabIndex = 0;
             this.lblExtracted.Text = "Extracted Text";
             // 
@@ -237,9 +241,29 @@ namespace OCR
             this.lblConfidence.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblConfidence.Location = new System.Drawing.Point(10, 6);
             this.lblConfidence.Name = "lblConfidence";
-            this.lblConfidence.Size = new System.Drawing.Size(143, 17);
+            this.lblConfidence.Size = new System.Drawing.Size(133, 17);
             this.lblConfidence.TabIndex = 0;
             this.lblConfidence.Text = "OCR Confidence: N/A";
+            // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(199, 5);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 3;
+            this.button1.Text = ">";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // button2
+            // 
+            this.button2.Location = new System.Drawing.Point(118, 5);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(75, 23);
+            this.button2.TabIndex = 4;
+            this.button2.Text = "<";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // ComparisonView
             // 
@@ -289,5 +313,7 @@ namespace OCR
         private System.Windows.Forms.Label lblQualityIndicator;
         private System.Windows.Forms.Label lblStats;
         private System.Windows.Forms.Button btnClose;
+        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button button1;
     }
 }
