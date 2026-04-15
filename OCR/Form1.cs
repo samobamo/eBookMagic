@@ -113,15 +113,17 @@ namespace OCR
                         _lastExtractedText = extractedText;
                         
                         richTextBox1.AppendText(extractedText);
-                        
-                        // Update comparison view if open
+                        richTextBox1.AppendText($"\n[Confidence: {_lastConfidence:P2}]\n");
+
+                        // Update comparison view if open. it is never open
+                        //this is bullshit
                         if (_comparisonView != null && !_comparisonView.IsDisposed)
                         {
                             _comparisonView.UpdateComparison(_lastScreenshot, extractedText, _lastConfidence);
                         }
 
                         // Add to list of images and text
-                        listImages.Add(new ImageTextBuffer(index++, extractedText, (Image)_lastScreenshot.Clone()));
+                        listImages.Add(new ImageTextBuffer(index, extractedText, (Image)_lastScreenshot.Clone()));
                     }
                 }
                 
@@ -331,7 +333,7 @@ namespace OCR
                 
                 UpdateStatus("OCR completed successfully");
                 ShowProgress(false);
-                UpdatePageCount(index);
+                //UpdatePageCount(index);
                 
                 // Update progress floater to show completion
                 _progressFloater?.CompleteProgress($"Complete! {index} pages processed.");
