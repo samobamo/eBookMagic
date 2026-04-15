@@ -25,7 +25,7 @@ namespace OCR
             if (buffer == null) throw new ArgumentNullException(nameof(buffer));
             _imageTextBuffer.Clear();
             _imageTextBuffer.AddRange(buffer);
-            UpdateComparison(buffer[0].Image, buffer[0].Text);
+            UpdateComparison(buffer[0].Image, buffer[0].Text, buffer[0].Confidence);
         }
 
         /// <summary>
@@ -224,7 +224,7 @@ namespace OCR
                 }
                 else
                 {
-                    UpdateComparison(_imageTextBuffer[_currentBufferIndex].Image, _imageTextBuffer[_currentBufferIndex].Text);                    
+                    UpdateComparison(_imageTextBuffer[_currentBufferIndex].Image, _imageTextBuffer[_currentBufferIndex].Text, _imageTextBuffer[_currentBufferIndex].Confidence);
                 }
             }
         }
@@ -245,7 +245,7 @@ namespace OCR
                 }
                 else
                 {
-                    UpdateComparison(_imageTextBuffer[_currentBufferIndex].Image, _imageTextBuffer[_currentBufferIndex].Text);                    
+                    UpdateComparison(_imageTextBuffer[_currentBufferIndex].Image, _imageTextBuffer[_currentBufferIndex].Text, _imageTextBuffer[_currentBufferIndex].Confidence);
                 }
             }
         }

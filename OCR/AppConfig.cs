@@ -88,6 +88,9 @@ namespace OCR
 
         #region UI Settings
 
+        public static string LastCapturedRegion =>
+            ConfigurationManager.AppSettings["LastCapturedRegion"] ?? "100,100,100,100";
+
         /// <summary>
         /// Number of pages to process before updating progress indicator.
         /// Default: 10

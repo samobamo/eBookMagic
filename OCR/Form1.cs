@@ -113,17 +113,10 @@ namespace OCR
                         _lastExtractedText = extractedText;
                         
                         richTextBox1.AppendText(extractedText);
-                        richTextBox1.AppendText($"\n[Confidence: {_lastConfidence:P2}]\n");
-
-                        // Update comparison view if open. it is never open
-                        //this is bullshit
-                        if (_comparisonView != null && !_comparisonView.IsDisposed)
-                        {
-                            _comparisonView.UpdateComparison(_lastScreenshot, extractedText, _lastConfidence);
-                        }
+                        richTextBox1.AppendText($"\n[Confidence: {_lastConfidence:P2}]\n");                        
 
                         // Add to list of images and text
-                        listImages.Add(new ImageTextBuffer(index, extractedText, (Image)_lastScreenshot.Clone()));
+                        listImages.Add(new ImageTextBuffer(index, extractedText, (Image)_lastScreenshot.Clone(), _lastConfidence * 100));
                     }
                 }
                 
@@ -158,9 +151,33 @@ namespace OCR
 
             using (var screenShot2 = new ScreenShot2 { InstanceRef = this })
             {
+                var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);                
+                if (!String.IsNullOrEmpty(AppConfig.LastCapturedRegion))
+                {
+                    screenShot2.StartPosition = FormStartPosition.Manual;
+                    var parts = AppConfig.LastCapturedRegion.Split(',');
+                    if (parts.Length == 4 &&
+                        int.TryParse(parts[0], out int x) &&
+                        int.TryParse(parts[1], out int y) &&
+                        int.TryParse(parts[2], out int width) &&
+                        int.TryParse(parts[3], out int height))
+                    {
+                        screenShot2.Left = x;
+                        screenShot2.Top = y;
+                        screenShot2.Width = width;
+                        screenShot2.Height = height;
+                    }
+                }
                 screenShot2.ShowDialog();
                 var result = await screenShot2.GetSelectionResultAsync();
                 captureRect = result.Bounds;
+                //todo: cleanup!!!                
+                if (config.AppSettings.Settings["LastCapturedRegion"] != null)
+                    config.AppSettings.Settings["LastCapturedRegion"].Value = captureRect.X + "," + captureRect.Y + "," + captureRect.Width + "," + captureRect.Height;
+                else
+                    config.AppSettings.Settings.Add("LastCapturedRegion", captureRect.X + "," + captureRect.Y + "," + captureRect.Width + "," + captureRect.Height);
+                config.Save(ConfigurationSaveMode.Modified);
+                ConfigurationManager.RefreshSection("appSettings");
                 readCompleted = result.WasCancelled;
             }
         }
@@ -309,23 +326,7 @@ namespace OCR
                     
                     // Update system tray icon for minimized feedback
                     int percentage = (int)((double)index / pagesToRead * 100);
-                    notifyIcon1.Text = $"eBookMagic - {index}/{pagesToRead} ({percentage}%)";
-                    
-                    // Show balloon tip at 25%, 50%, 75% milestones (only once per milestone)
-                    if (percentage == 25 || percentage == 50 || percentage == 75)
-                    {
-                        try
-                        {
-                            notifyIcon1.BalloonTipTitle = "OCR Progress";
-                            notifyIcon1.BalloonTipText = $"{percentage}% complete - {index} of {pagesToRead} pages processed";
-                            notifyIcon1.BalloonTipIcon = ToolTipIcon.Info;
-                            notifyIcon1.ShowBalloonTip(3000);
-                        }
-                        catch
-                        {
-                            // Balloon tips may fail on some Windows configurations
-                        }
-                    }
+                    notifyIcon1.Text = $"eBookMagic - {index}/{pagesToRead} ({percentage}%)";                                        
                 }
 
                 if (AppConfig.ShowTimestamps)
@@ -336,17 +337,8 @@ namespace OCR
                 //UpdatePageCount(index);
                 
                 // Update progress floater to show completion
-                _progressFloater?.CompleteProgress($"Complete! {index} pages processed.");
+                _progressFloater?.CompleteProgress($"Complete! {index} pages processed.");                
                 
-                // Notify user via system tray
-                try
-                {
-                    notifyIcon1.BalloonTipTitle = "OCR Complete";
-                    notifyIcon1.BalloonTipText = $"Successfully processed {index} pages!";
-                    notifyIcon1.BalloonTipIcon = ToolTipIcon.Info;
-                    notifyIcon1.ShowBalloonTip(5000);
-                }
-                catch { }
                 
                 notifyIcon1.Text = "eBookMagic - Ready";
             }
@@ -359,16 +351,7 @@ namespace OCR
                 notifyIcon1.Text = "eBookMagic - Error occurred";
                 
                 // Update progress floater
-                _progressFloater?.CompleteProgress("Error occurred!");
-                
-                try
-                {
-                    notifyIcon1.BalloonTipTitle = "OCR Error";
-                    notifyIcon1.BalloonTipText = "An error occurred during processing.";
-                    notifyIcon1.BalloonTipIcon = ToolTipIcon.Error;
-                    notifyIcon1.ShowBalloonTip(5000);
-                }
-                catch { }
+                _progressFloater?.CompleteProgress("Error occurred!");                                
             }
             finally
             {
@@ -577,28 +560,38 @@ namespace OCR
 
         private void ShowComparisonView()
         {
-            // Create comparison view if it doesn't exist or was disposed
-            if (_comparisonView == null || _comparisonView.IsDisposed)
+            try
             {
-                //_comparisonView = new ComparisonView();
-                //load imageList
-                _comparisonView = new ComparisonView(listImages);
-                if (listImages != null && listImages.Count > 0)
+                // Create comparison view if it doesn't exist or was disposed
+                if (_comparisonView == null || _comparisonView.IsDisposed)
                 {
-                    var latest = listImages.First();
-                    _comparisonView.UpdateComparison(latest.Image, latest.Text, 0);
-                }                
-            }
+                    //_comparisonView = new ComparisonView();
+                    //load imageList
 
-            // Show the comparison view
-            if (!_comparisonView.Visible)
-            {
-                _comparisonView.Show(this);
-                UpdateStatus("Comparison view opened");
+                    _comparisonView = new ComparisonView(listImages);
+                    if (listImages != null && listImages.Count > 0)
+                    {
+                        var latest = listImages.First();
+                        _comparisonView.UpdateComparison(latest.Image, latest.Text, latest.Confidence);
+                    }
+
+                }
+
+                // Show the comparison view
+                if (!_comparisonView.Visible)
+                {
+                    _comparisonView.Show(this);
+                    UpdateStatus("Comparison view opened");
+                }
+                else
+                {
+                    _comparisonView.BringToFront();
+                }
             }
-            else
+            catch (Exception ex)
             {
-                _comparisonView.BringToFront();
+                MessageBox.Show("No comparison view available. Scan a document first.", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

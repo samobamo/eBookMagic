@@ -71,6 +71,7 @@ namespace OCR
             InitializeComponent();
             SetStyle(ControlStyles.ResizeRedraw, true);
         }
+        
 
         #endregion
 
@@ -83,17 +84,7 @@ namespace OCR
             
             var bounds = new Rectangle(Location.X, Location.Y, Width, Height);
             return new SelectionResult(bounds, _wasCancelled);
-        }
-
-        [Obsolete("Use GetSelectionResultAsync instead. This method blocks the UI thread.", error: false)]
-        public Rectangle GetRectangle()
-        {
-            System.Threading.Thread.Sleep(AppConfig.FormCloseDelayMs);
-            return new Rectangle(Location.X, Location.Y, Width, Height);
-        }
-
-        [Obsolete("Use GetSelectionResultAsync instead.", error: false)]
-        public bool GetClosedFlag() => _wasCancelled;
+        }        
 
         #endregion
 
