@@ -124,17 +124,17 @@
       <DependentUpon>SettingsForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <None Include="ALWAYS_ON_TOP.md" />
-    <None Include="BALLOON_FIX.md" />
-    <None Include="COMPARISON_VIEW.md" />
-    <None Include="CONFIGURATION.md" />
-    <None Include="EMOJI_FIX.md" />
-    <None Include="FLOATING_PROGRESS.md" />
-    <None Include="GUI_SETTINGS_GUIDE.md" />
+    <None Include="MD\ALWAYS_ON_TOP.md" />
+    <None Include="MD\BALLOON_FIX.md" />
+    <None Include="MD\COMPARISON_VIEW.md" />
+    <None Include="MD\CONFIGURATION.md" />
+    <None Include="MD\EMOJI_FIX.md" />
+    <None Include="MD\FLOATING_PROGRESS.md" />
+    <None Include="MD\GUI_SETTINGS_GUIDE.md" />
     <None Include="packages.config" />
-    <None Include="PHASE1_IMPROVEMENTS.md" />
-    <None Include="PHASE2_FEATURES.md" />
-    <None Include="PROGRESS_FIX.md" />
+    <None Include="MD\PHASE1_IMPROVEMENTS.md" />
+    <None Include="MD\PHASE2_FEATURES.md" />
+    <None Include="MD\PROGRESS_FIX.md" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -144,7 +144,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <None Include="USER_SETTINGS_GUIDE.md" />
+    <None Include="MD\USER_SETTINGS_GUIDE.md" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
